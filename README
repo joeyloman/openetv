@@ -1,0 +1,129 @@
+**********************
+*** OpenETV README ***
+**********************
+
+
+DESCRIPTION
+===========
+
+OpenETV (Open Enigma TV) is a media transcoding server for Enigma2 (Dreambox, VU+ and other clone) devices.
+With this application you can encode/compress the Enigma2 media channels of your Dreambox or clone
+on the fly (transcoding) and make them available through http on you local network or the internet.
+
+OpenETV has a build-in webserver for managing your streams. You can select your bouquets, channels and
+start/stop the streams.
+
+OpenETV talks to the WebIF (Web Interface) of your Enigma2 device to select your bouquets and channels.
+For the time being it uses VLC to transcode the media and export a http stream.
+
+Theoretically this application should run cross-platform because it's written in Python. It only requires
+a proper Python/VLC installation. Linux (CentOS 6 and Fedora 20) and Mac OS X run this application
+successfully. Windows isn't tested yet, but should also work with a simular Python/VLC setup.
+
+
+GETTING STARTED
+===============
+
+First install the required dependencies:
+- Python 2.6 or higher
+- Python libxml2 library
+- VLC 2.0.10 or higher (maybe lower, but I didn't tested this)
+
+
+Linux
+-----
+Note: the Linux install section is based and tested on CentOS 6 and Fedora 20. But if you want to run
+it on other distro's the steps below are similar except for the package installation part.
+
+To install the VLC packages on CentOS 6 you need to add the rpmfusion repo:
+$ sudo yum localinstall --nogpgcheck http://download1.rpmfusion.org/free/el/updates/6/x86_64/rpmfusion-free-release-6-1.noarch.rpm
+
+If you are running Fedora 20 do the following to add the rpmfusion repo:
+$ sudo yum localinstall http://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-20.noarch.rpm
+
+Install the VLC rpms:
+$ sudo yum install -y vlc
+
+Install the required Python libs:
+$ sudo yum install -y libxml2-python
+
+
+Mac OS X
+--------
+Download and install VLC.
+The easiest way to get the modules work is to download and install the Mac OS X ports.
+
+And then install the required ports:
+$ sudo port install python27 py27-libxml2
+
+Edit openetv.py with your favorite editor and change the interpeter in openetv.py line 1 to:
+#!/opt/local/bin/python2.7
+
+
+Configure OpenETV
+-----------------
+Edit openetv.py with your favorite editor and configure the following options:
+
+Transcoding options:
+Transcoding is a heavy CPU intensive process so you need a PC with enough power to suit your needs.
+In the source code header there are 2 transcoding options in the VLC stream section, named vlc_stream_options:
+  1) Poor quality (this one I use on my old Intel Atom 330 fileserver and stream it over a 3G network to my Smartphone)
+  2) Good quality (this one I tested on my Macbook Pro Core i7)
+Choose one of them by comment/uncomment the selected option. Or if you have other needs configure the VLC
+stream option by yourself.
+
+Enigma host:
+Make sure the Enigma WebIf is enabled on your Dreambox or clone. If so, configure the ip address and the tcp port
+of your device in the following options, for example:
+enigma2_host     = "192.168.0.5"
+enigma2_port     = 80
+
+VLC executable path:
+Set the correct vlc executable path (default is Linux) by comment/uncommenting the vlc_exe variable.
+
+
+Start OpenETV
+-------------
+./openetv.py start
+
+Note: it's not recommended to start openetv as root. Instead create a service account and run openetv with
+reduced privileges.
+
+Launch your browser and go to: "http://<openetv-host>:8081".
+
+Select your bouquet and channel, and click on the "start stream" button. Then launch VLC on your client device
+and connect it to "http://<openetv-host>:8080".
+
+If something went wrong you can check the openetv.log file for errors. If it doesn't have enough information
+you can set the debug flag in openetv.py to 1 and restart it. Then repeat the browser steps and recheck the
+logfile for more details.
+
+
+NOTES
+=====
+
+This project started as an alternative to watch the World Cup Soccer on my Tablet and Smartphone instead of my TV
+whem I'm not at home. Because I'm very limited in my time right now I decided to release this code before the
+World Cup begins so others can use it for such a purpuse.
+
+Because of this the following features are not yet implemented:
+- Enigma username/password authentication
+- Enigma1 support
+- OpenETV web authentication
+
+If you want to secure your OpenETV webserver for the big bad internet you can, for example, put it behind a
+Apache HTTPD Server with a reverse proxy pass configuration and secure it with Apache authentication).
+Or, another method, setup a VPN and use it over the VPN.
+
+
+LICENSE
+=======
+
+Copyright (c) 2014 by Joey Loman, <joey@binbash.org>
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+See files COPYING.GPL2 and COPYING.GPL3 for License information.
