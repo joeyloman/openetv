@@ -84,7 +84,7 @@ Set the correct vlc executable path (default is Linux) by comment/uncommenting t
 
 Start OpenETV
 -------------
-./openetv.py start
+$ ./openetv.py start
 
 Note: it's not recommended to start openetv as root. Instead create a service account and run openetv with
 reduced privileges.

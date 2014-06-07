@@ -74,6 +74,8 @@ enigma2_port     = 80
 #
 # VLC executable path Linux:
 #
+# Note: cvlc means "command-line VLC"
+#
 vlc_exe                   = "/usr/bin/cvlc"
 
 #
@@ -116,22 +118,34 @@ def log(msg):
     f.close()
 
 def html_header():
-    html = "<html>\n<head>\n<title>"
+    html = "<html>\n"
+    html += "<head>\n"
+    html += "<title>\n"
     html += name + " version " + version
     html += "</title>\n"
     html += "</head>\n"
-    html += "<style>"
-    html += "body,a { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: 7e7e7e; line-height: 17px; }"
-    html += "td { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: white; line-height: 17px; }"
-    html += "input,select { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: black; line-height: 17px; background-color: d7d0d0;}"
-    html += "tr.even { background-color: #30ba14; color: white;}"
-    html += "tr.odd { background-color: #60148c; color: white;}"
-    html += "</style>"
+    html += "<style>\n"
+    html += "body,a { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: 7e7e7e; line-height: 17px; }\n"
+    html += "td { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: white; line-height: 17px; }\n"
+    html += "input,select { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: black; line-height: 17px; background-color: d7d0d0;}\n"
+    html += "tr.even { background-color: #30ba14; color: white;}\n"
+    html += "tr.odd { background-color: #60148c; color: white;}\n"
+    html += "</style>\n"
     html += "<body>\n"
+
     f = open(logo_file_path, 'r')
     image_data = f.read()
     f.close()
-    html += "<img src=\"data:image/png;base64," + base64.b64encode(image_data) + "\" /><br><br>\n"
+
+    html += "<img src=\"data:image/png;base64,"
+
+    # split the base64 image data into chunks (according to the rfc)
+    b64 = base64.b64encode(image_data)
+    chunksize = 64
+    for pos in xrange(0, len(b64), chunksize):
+        html += b64[pos:pos+chunksize] + "\r\n"
+
+    html += "\" /><br><br>\n"
 
     return html
 
@@ -150,8 +164,9 @@ def html_menu(active_channel,active_channel_name):
     return html
 
 def html_footer():
-    html = "<br><i>" + name + " version " + version + " - <a href=\"http://www.openetv.org\" target=\"_blank\">http://www.openetv.org</a></i><br>"
-    html += "</body>\n</html>\n"
+    html = "<br><i>" + name + " version " + version + " - <a href=\"http://www.openetv.org\" target=\"_blank\">http://www.openetv.org</a></i><br>\n"
+    html += "</body>\n"
+    html += "</html>\n"
 
     return html
 
