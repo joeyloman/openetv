@@ -33,7 +33,7 @@ from signal import SIGTERM
 # OpenETV options
 #
 name             = "OpenETV"
-version          = "201406041"
+version          = "201409161"
 
 #
 # The following files are saved to the current working directory
@@ -89,7 +89,14 @@ vlc_exe                   = "/usr/bin/cvlc"
 # The following VLC options produce a low quality MPEG1 stream which I use to transcode videos on an old Intel ATOM 330
 # and stream it over a 3G network on my cellphone.
 #
-vlc_stream_options        = "venc=x264,vcodec=mp1v,vb=160,width=240,height=160,fps=18,acodec=mp3,ab=96,samplerate=44100"
+#vlc_stream_options        = "venc=x264,vcodec=mp1v,vb=160,width=240,height=160,fps=18,acodec=mp3,ab=96,samplerate=44100"
+
+#
+# Medium quality:
+#
+# The following VLC options produce a good quality H264 stream for Tablets and Smart Phones.
+#
+vlc_stream_options        = "venc=x264,vcodec=h264,vb=320,width=480,height=384,fps=25,acodec=mp3,ab=128,samplerate=44100"
 
 #
 # Good quality:
@@ -143,7 +150,7 @@ def html_header():
     b64 = base64.b64encode(image_data)
     chunksize = 64
     for pos in xrange(0, len(b64), chunksize):
-        html += b64[pos:pos+chunksize] + "\r\n"
+        html += b64[pos:pos+chunksize] + "\n"
 
     html += "\" /><br><br>\n"
 
@@ -405,7 +412,12 @@ class App:
                     html += html_menu(active_channel,active_channel_name)
                     html += html_footer()
 
-                    c.send(html)
+                    write_data = "HTTP/1.1 200 OK\n"
+                    write_data += "Content-Length: %d\n" % len(html)
+                    write_data += "Content-Type: text/html\n\n"
+                    write_data += html
+
+                    c.send(write_data)
                 elif page[:8] == "/bouquet":
                     """
                     Expected parameters: /bouquet=<bouquet-id>
@@ -430,7 +442,12 @@ class App:
                         html += "<b>Error: bouquet id is invalid!</b><br>"
                         html += html_footer()
 
-                        c.send(html)
+                        write_data = "HTTP/1.1 200 OK\n"
+                        write_data += "Content-Length: %d\n" % len(html)
+                        write_data += "Content-Type: text/html\n\n"
+                        write_data += html
+
+                        c.send(write_data)
                         c.close()
 
                     if not 0 <= int(bid) < max_bouquets:
@@ -445,7 +462,12 @@ class App:
                         html += "<b>Error: bouquetplaylist id is not in range between 0 and 999!</b><br>"
                         html += html_footer()
 
-                        c.send(html)
+                        write_data = "HTTP/1.1 200 OK\n"
+                        write_data += "Content-Length: %d\n" % len(html)
+                        write_data += "Content-Type: text/html\n\n"
+                        write_data += html
+
+                        c.send(write_data)
                         c.close()
 
                     if self.rb_res:
@@ -470,7 +492,12 @@ class App:
                     html += html_menu(active_channel,active_channel_name)
                     html += html_footer()
 
-                    c.send(html)
+                    write_data = "HTTP/1.1 200 OK\n"
+                    write_data += "Content-Length: %d\n" % len(html)
+                    write_data += "Content-Type: text/html\n\n"
+                    write_data += html
+
+                    c.send(write_data)
                 elif page[:6] == "/start":
                     """
                     Expected parameters: /start=<channel-id>
@@ -495,7 +522,12 @@ class App:
                         html += "<b>Error: playlist id is invalid!</b><br>"
                         html += html_footer()
 
-                        c.send(html)
+                        write_data = "HTTP/1.1 200 OK\n"
+                        write_data += "Content-Length: %d\n" % len(html)
+                        write_data += "Content-Type: text/html\n\n"
+                        write_data += html
+
+                        c.send(write_data)
                         c.close()
 
                     if not 0 <= int(id) < max_channels:
@@ -510,7 +542,12 @@ class App:
                         html += "<b>Error: playlist id is not in range between 0 and 999!</b><br>"
                         html += html_footer()
 
-                        c.send(html)
+                        write_data = "HTTP/1.1 200 OK\n"
+                        write_data += "Content-Length: %d\n" % len(html)
+                        write_data += "Content-Type: text/html\n\n"
+                        write_data += html
+
+                        c.send(write_data)
                         c.close()
 
                     html = html_header()
@@ -533,7 +570,12 @@ class App:
                     html += html_menu(active_channel,active_channel_name)
                     html += html_footer()
 
-                    c.send(html)
+                    write_data = "HTTP/1.1 200 OK\n"
+                    write_data += "Content-Length: %d\n" % len(html)
+                    write_data += "Content-Type: text/html\n\n"
+                    write_data += html
+
+                    c.send(write_data)
 
                     # shutdown the socket, otherwise the client still thinks it recieves data
                     c.shutdown(socket.SHUT_RDWR)
@@ -583,7 +625,12 @@ class App:
                         html += html_menu(active_channel,active_channel_name)
                         html += html_footer()
 
-                    c.send(html)
+                    write_data = "HTTP/1.1 200 OK\n"
+                    write_data += "Content-Length: %d\n" % len(html)
+                    write_data += "Content-Type: text/html\n\n"
+                    write_data += html
+
+                    c.send(write_data)
                 elif page[:8] == "/refresh":
                     """
                     Expected parameters: "bouquet" or "channel"
@@ -612,7 +659,12 @@ class App:
                     html += html_menu(active_channel,active_channel_name)
                     html += html_footer()
 
-                    c.send(html)
+                    write_data = "HTTP/1.1 200 OK\n"
+                    write_data += "Content-Length: %d\n" % len(html)
+                    write_data += "Content-Type: text/html\n\n"
+                    write_data += html
+
+                    c.send(write_data)
 
             if debug:
                 log("[App::run] closing connection")
