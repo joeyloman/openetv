@@ -64,11 +64,15 @@ Configure OpenETV
 -----------------
 Edit openetv.py with your favorite editor and configure the following options:
 
+OpenETV directory:
+Set the openetv_dir variable to the directory path where openetv.py and it's other files are located.
+
 Transcoding options:
 Transcoding is a heavy CPU intensive process so you need a PC with enough power to suit your needs.
-In the source code header there are 2 transcoding options in the VLC stream section, named vlc_stream_options:
-  1) Poor quality (this one I use on my old Intel Atom 330 fileserver and stream it over a 3G network to my Smartphone)
-  2) Good quality (this one I tested on my Macbook Pro Core i7)
+In the source code header there are 3 transcoding options in the VLC stream section, named vlc_stream_options:
+  1) Poor quality (this one I used on my old Intel Atom 330 fileserver and stream it over a 3G network to my Smartphone)
+  2) Medium quality (I also used this one on my Intel ATOM C2750 with 4 threads enabled instead of 8)
+  3) Good quality (this one I use on my Intel ATOM C2750 and stream it over a 3G network to my Smartphone)
 Choose one of them by comment/uncomment the selected option. Or if you have other needs configure the VLC
 stream option by yourself.
 
@@ -77,6 +81,14 @@ Make sure the Enigma WebIf is enabled on your Dreambox or clone. If so, configur
 of your device in the following options, for example:
 enigma2_host     = "192.168.0.5"
 enigma2_port     = 80
+
+If you use https, and for example on port 443, set the enigma2_use_ssl variable to "yes": 
+enigma2_port     = 443
+enigma2_use_ssl  = "yes"
+
+If you enabled authentication, set the enigma2_username and enigma2_password variables, for example:
+enigma2_username = "username"
+enigma2_password = "password"
 
 VLC executable path:
 Set the correct vlc executable path (default is Linux) by comment/uncommenting the vlc_exe variable.
@@ -101,15 +113,6 @@ logfile for more details.
 
 NOTES
 =====
-
-This project started as an alternative to watch the World Cup Soccer on my Tablet and Smartphone instead of my TV
-whem I'm not at home. Because I'm very limited in my time right now I decided to release this code before the
-World Cup begins so others can use it for such a purpuse.
-
-Because of this the following features are not yet implemented:
-- Enigma username/password authentication
-- Enigma1 support
-- OpenETV web authentication
 
 If you want to secure your OpenETV webserver for the big bad internet you can, for example, put it behind a
 Apache HTTPD Server with a reverse proxy pass configuration and secure it with Apache authentication).

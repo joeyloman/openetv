@@ -20,6 +20,7 @@ import os
 import atexit
 import sys
 import libxml2
+import re
 import base64
 import signal
 
@@ -33,7 +34,12 @@ from signal import SIGTERM
 # OpenETV options
 #
 name             = "OpenETV"
-version          = "201409161"
+version          = "201501301"
+
+#
+# Specify the directory where OpenETV is located
+#
+openetv_dir         = "/opt/openetv"
 
 #
 # The following files are saved to the current working directory
@@ -50,6 +56,7 @@ max_channels     = 1000
 
 #
 # Debugging:
+#
 # None = disabled
 # 1 = enabled
 #
@@ -64,8 +71,17 @@ bind_port        = 8081
 #
 # Enigma2 WebIF options
 #
-enigma2_host     = "192.168.0.10"
-enigma2_port     = 80
+# enigma2_host     : hostname or ip adress of the enigma2 host
+# enigma2_port     : tcp port where the enigma2 host is listening on
+# enigma2_username : if authentication is enabled on the WebIF provide a enigma2 username
+# enigma2_password : if authentication is enabled on the WebIF provide a enigma2 password
+# enigma2_use_ssl  : set this to yes if https is enabled on the enigma2 host
+#
+enigma2_host     = "192.168.1.10"
+enigma2_port     = 443
+enigma2_username = "username"
+enigma2_password = "password"
+enigma2_use_ssl  = "yes"
 
 #
 # VLC options
@@ -86,24 +102,25 @@ vlc_exe                   = "/usr/bin/cvlc"
 #
 # Poor quality:
 #
-# The following VLC options produce a low quality MPEG1 stream which I use to transcode videos on an old Intel ATOM 330
-# and stream it over a 3G network on my cellphone.
+# The following VLC options produce a low quality MPEG1 stream which I used to transcode videos on an old Intel ATOM 330
+# and stream it over a 3G network to my cellphone.
 #
 #vlc_stream_options        = "venc=x264,vcodec=mp1v,vb=160,width=240,height=160,fps=18,acodec=mp3,ab=96,samplerate=44100"
 
 #
 # Medium quality:
 #
-# The following VLC options produce a good quality H264 stream for Tablets and Smart Phones.
+# The following VLC options produce a medium quality MPEG1 stream for Tablets and Smart Phones.
 #
-vlc_stream_options        = "venc=x264,vcodec=h264,vb=320,width=480,height=384,fps=25,acodec=mp3,ab=128,samplerate=44100"
+#vlc_stream_options        = "venc=x264,vcodec=mp1v,vb=320,width=480,height=384,fps=25,acodec=mp3,ab=128,samplerate=44100"
 
 #
 # Good quality:
 #
-# The following VLC options produce a good quality H264 stream for Tablets and Smart Phones.
+# The following VLC options produce a good quality H264 stream for Tablets and Smart Phones. This one is tested on a
+# Intel ATOM C2750. This also streams without problems over a 3G network to my cellphone.
 #
-#vlc_stream_options        = "venc=x264,vcodec=h264,vb=1000,width=720,height=576,fps=25,acodec=mp3,ab=128,samplerate=44100"
+vlc_stream_options        = "venc=x264,vcodec=h264,width=720,height=576,fps=25,acodec=mp3,ab=128,samplerate=44100"
 
 #
 # VLC stream bindings
@@ -711,7 +728,11 @@ class Bouquets(object):
         if debug:
             log("[Bouquets::get_bouquet_list] debug: entering function")
 
-        req_url = "http://" + enigma2_host + ":" + "%d" % enigma2_port + "/web/getservices"
+        #from pudb import set_trace; set_trace()
+        if enigma2_use_ssl == "yes":
+            req_url = "https://" + enigma2_host + ":" + "%d" % enigma2_port + "/web/getservices"
+        else:
+            req_url = "http://" + enigma2_host + ":" + "%d" % enigma2_port + "/web/getservices"
 
         if debug:
             log("[Bouquets::get_bouquet_list] debug: opening url: " + req_url)
@@ -719,10 +740,60 @@ class Bouquets(object):
         req = urllib2.Request(req_url)
         try:
             handle = urllib2.urlopen(req)
+        except IOError, e:
+            pass
         except:
             log("[Bouquets::get_bouquet_list] error: cannot get bouquet list!")
-
             return None
+
+        # check for error codes
+        try:
+            e
+        except NameError:
+            # no error, open the url
+            try:
+                handle = urllib2.urlopen(req)
+            except:
+                log("[Bouquets::get_bouquet_list] error: cannot get bouquet list!")
+                return None
+        else:
+            # check for other errors then 401 (authorization required)    
+            if e.code == 401:
+                # check for an www-authenticate line
+                authline = e.headers.get('www-authenticate', '')
+                if not authline:
+                    log("[Bouquets::get_bouquet_list] error: no authentication response header found!")
+                    return None
+   
+                # this regular expression is used to extract scheme and realm 
+                authobj = re.compile(r'''(?:\s*www-authenticate\s*:)?\s*(\w*)\s+realm=['"](\w+)['"]''', re.IGNORECASE)
+                matchobj = authobj.match(authline)
+                if not matchobj:
+                    log("[Bouquets::get_bouquet_list] error: the authentication line is badly formed!")
+                    return None
+
+                scheme = matchobj.group(1) 
+                realm = matchobj.group(2)
+                if scheme.lower() != 'basic':
+                    log("[Bouquets::get_bouquet_list] error: no basic authentication method!")
+                    return None
+
+                # base64 encode the username and password and sent it to the server
+                base64string = base64.encodestring('%s:%s' % (enigma2_username, enigma2_password))[:-1]
+                authheader =  "Basic %s" % base64string
+                req.add_header("Authorization", authheader)
+                try:
+                    handle = urllib2.urlopen(req)
+                except IOError, e:
+                    log("[Bouquets::get_bouquet_list] error: enigma2_username or enigma2_password is wrong!")
+                    return None
+            else:
+                try:
+                    handle = urllib2.urlopen(req)
+                except:
+                    log("[Bouquets::get_bouquet_list] error: cannot get bouquet list!")
+                    return None
+
 
         # read the http content
         content = handle.read()
@@ -870,7 +941,10 @@ class Channels(object):
         if debug:
             log("[Channels::refresh_channel_list] debug: entering function")
 
-        req_url = "http://" + enigma2_host + ":" + "%d" % enigma2_port + "/web/services.m3u?bRef=" + urllib.quote(bouquet_ref)
+        if enigma2_use_ssl == "yes":
+            req_url = "https://" + enigma2_host + ":" + "%d" % enigma2_port + "/web/services.m3u?bRef=" + urllib.quote(bouquet_ref)
+        else:
+            req_url = "http://" + enigma2_host + ":" + "%d" % enigma2_port + "/web/services.m3u?bRef=" + urllib.quote(bouquet_ref)
 
         if debug:
             log("[Channels::get_channel_list] debug: opening url: " + req_url)
@@ -878,10 +952,59 @@ class Channels(object):
         req = urllib2.Request(req_url)
         try:
             handle = urllib2.urlopen(req)
+        except IOError, e:
+            pass
         except:
-            log("[Channels::get_channel_list] error: cannot refresh channel list!")
-
+            log("[Channels::get_channel_list] error: cannot get bouquet list!")
             return None
+
+        # check for error codes
+        try:
+            e
+        except NameError:
+            # no error, open the url
+            try:
+                handle = urllib2.urlopen(req)
+            except:
+                log("[Channels::get_channel_list] error: cannot refresh channel list!")
+                return None
+        else:
+            # check for other errors then 401 (authorization required)    
+            if e.code == 401:
+                # check for an www-authenticate line
+                authline = e.headers.get('www-authenticate', '')
+                if not authline:
+                    log("[Channels::get_channel_list] error: no authentication response header found!")
+                    return None
+   
+                # this regular expression is used to extract scheme and realm 
+                authobj = re.compile(r'''(?:\s*www-authenticate\s*:)?\s*(\w*)\s+realm=['"](\w+)['"]''', re.IGNORECASE)
+                matchobj = authobj.match(authline)
+                if not matchobj:
+                    log("[Channels::get_channel_list] error: the authentication line is badly formed!")
+                    return None
+
+                scheme = matchobj.group(1) 
+                realm = matchobj.group(2)
+                if scheme.lower() != 'basic':
+                    log("[Channels::get_channel_list] error: no basic authentication method!")
+                    return None
+
+                # base64 encode the username and password and sent it to the server
+                base64string = base64.encodestring('%s:%s' % (enigma2_username, enigma2_password))[:-1]
+                authheader =  "Basic %s" % base64string
+                req.add_header("Authorization", authheader)
+                try:
+                    handle = urllib2.urlopen(req)
+                except IOError, e:
+                    log("[Channels::get_channel_list] error: enigma2_username or enigma2_password is wrong!")
+                    return None
+            else:
+                try:
+                    handle = urllib2.urlopen(req)
+                except:
+                    log("[Channels::get_channel_list] error: cannot refresh channel list!")
+                    return None
 
         # read the http content
         content = handle.read()
@@ -1038,19 +1161,17 @@ class Channels(object):
 ### Main
 ###################################################################################
 
-# get the current working directory
-work_dir = os.getcwd()
-
 # store the logo file full path
-logo_file_path = work_dir + "/" + logo_file
+logo_file_path = openetv_dir + "/" + logo_file
 
 # check if the logo image file can be found
 if not os.path.isfile(logo_file_path):
     print "error: logo image file not found at \"" + logo_file_path + "\""
+    print "       maybe the openetv_dir variable isn't configured correctly?"
     sys.exit(2)
 
 # store the log file full path
-log_file_path = work_dir + "/" + log_file
+log_file_path = openetv_dir + "/" + log_file
 
 # check if we can write the logfile
 try:
@@ -1062,7 +1183,7 @@ except IOError:
 f.close
 
 # store the pid file full path
-pid_file_path = work_dir + "/" + pid_file
+pid_file_path = openetv_dir + "/" + pid_file
 
 # check if the vlc executable exists
 if not os.path.isfile(vlc_exe):
@@ -1072,10 +1193,13 @@ if not os.path.isfile(vlc_exe):
 app = App()
 if len(sys.argv) == 2:
     if 'start' == sys.argv[1]:
+        log("[Main] OpenETV started.")
         app.start()
     elif 'stop' == sys.argv[1]:
+        log("[Main] OpenETV stopped.")
         app.stop()
     elif 'restart' == sys.argv[1]:
+        log("[Main] OpenETV restarted.")
         app.restart()
     else:
         print "usage: %s start|stop|restart" % sys.argv[0]
