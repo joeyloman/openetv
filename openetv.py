@@ -34,7 +34,7 @@ from signal import SIGTERM
 # OpenETV options
 #
 name             = "OpenETV"
-version          = "201501301"
+version          = "201502011"
 
 #
 # Specify the directory where OpenETV is located
@@ -47,6 +47,7 @@ openetv_dir         = "/opt/openetv"
 logo_file        = "logo-app.png"
 log_file         = "openetv.log"
 pid_file         = "openetv.pid"
+vlc_pid_file     = "vlc.pid"
 
 #
 # The max options below should always be set to a larger value than the channel count in the bouquet list
@@ -77,7 +78,7 @@ bind_port        = 8081
 # enigma2_password : if authentication is enabled on the WebIF provide a enigma2 password
 # enigma2_use_ssl  : set this to yes if https is enabled on the enigma2 host
 #
-enigma2_host     = "192.168.1.10"
+enigma2_host     = "192.168.0.10"
 enigma2_port     = 443
 enigma2_username = "username"
 enigma2_password = "password"
@@ -128,6 +129,11 @@ vlc_stream_options        = "venc=x264,vcodec=h264,width=720,height=576,fps=25,a
 vlc_http_stream_bind_addr = "0.0.0.0"
 vlc_http_stream_bind_port = 8080
 
+#
+# In some circumstances VLC doesn't shutdown properly. If that's the case set vlc_hard_shutdown variable to "yes".
+#
+vlc_hard_shutdown = "no"
+
 
 ###################################################################################
 ### Functions
@@ -140,6 +146,28 @@ def log(msg):
     f = open(log_file_path, 'a')
     f.write(timestamp + msg + "\n")
     f.close()
+
+def get_vlc_pid():
+    try:
+        f = open(vlc_pid_file_path, 'r')
+    except:
+        return None
+
+    pid = f.read()
+    f.close
+
+    if debug:
+        log("[getvlcpid] debug: VLC pid = %d" % int(pid))
+
+    return int(pid)
+
+def write_vlc_pid(pid):
+    f = open(vlc_pid_file_path, 'w')
+    f.write("%d" % pid)
+    f.close()
+
+def remove_vlc_pid():
+    os.remove(vlc_pid_file_path)
 
 def html_header():
     html = "<html>\n"
@@ -317,6 +345,16 @@ class App:
 
         if debug:
             log("[App::stop] debug: entering function")
+
+        # check if VLC is running and kill it
+        pid = get_vlc_pid()
+        if pid:
+            try:
+                os.kill(pid, signal.SIGTERM)
+                remove_vlc_pid()
+            except:
+                # VLC is not running, remove the pidfile
+                remove_vlc_pid()
 
         # Get the pid from the pidfile
         try:
@@ -728,7 +766,6 @@ class Bouquets(object):
         if debug:
             log("[Bouquets::get_bouquet_list] debug: entering function")
 
-        #from pudb import set_trace; set_trace()
         if enigma2_use_ssl == "yes":
             req_url = "https://" + enigma2_host + ":" + "%d" % enigma2_port + "/web/getservices"
         else:
@@ -1105,6 +1142,9 @@ class Channels(object):
         # start the VLC process
         self.vlc_proc = subprocess.Popen(cmd, shell=True)
 
+        # write the pidfile
+        write_vlc_pid(self.vlc_proc.pid)
+
         self.active_channel = id
 
         return
@@ -1123,10 +1163,18 @@ class Channels(object):
             return None
 
         # shutdown VLC
-        self.vlc_proc.send_signal(signal.SIGINT)
+        if vlc_hard_shutdown == "yes":
+            # kill it the hard way
+            os.kill(get_vlc_pid(), signal.SIGTERM)
+        else:
+            # shutdown it gracefully
+            self.vlc_proc.send_signal(signal.SIGINT)
 
         # wait for it, otherwise it turns into a zombie
         self.vlc_proc.wait()
+
+        # remove the VLC pidfile
+        remove_vlc_pid()
 
         # set the active channel to "not active"
         self.active_channel = max_channels
@@ -1189,6 +1237,9 @@ pid_file_path = openetv_dir + "/" + pid_file
 if not os.path.isfile(vlc_exe):
     print "error: vlc executable not found at \"" + vlc_exe + "\""
     sys.exit(2)
+
+# store the vlc pid full path
+vlc_pid_file_path = openetv_dir + "/" + vlc_pid_file
 
 app = App()
 if len(sys.argv) == 2:
