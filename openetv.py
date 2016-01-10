@@ -34,7 +34,7 @@ from signal import SIGTERM
 # OpenETV options
 #
 name             = "OpenETV"
-version          = "201502011"
+version          = "201601101"
 
 #
 # Specify the directory where OpenETV is located
@@ -106,14 +106,14 @@ vlc_exe                   = "/usr/bin/cvlc"
 # The following VLC options produce a low quality MPEG1 stream which I used to transcode videos on an old Intel ATOM 330
 # and stream it over a 3G network to my cellphone.
 #
-#vlc_stream_options        = "venc=x264,vcodec=mp1v,vb=160,width=240,height=160,fps=18,acodec=mp3,ab=96,samplerate=44100"
+vlc_stream_options_poor   = "venc=x264,vcodec=mp1v,vb=160,width=240,height=160,fps=18,acodec=mp3,ab=96,samplerate=44100"
 
 #
 # Medium quality:
 #
 # The following VLC options produce a medium quality MPEG1 stream for Tablets and Smart Phones.
 #
-#vlc_stream_options        = "venc=x264,vcodec=mp1v,vb=320,width=480,height=384,fps=25,acodec=mp3,ab=128,samplerate=44100"
+vlc_stream_options_medium = "venc=x264,vcodec=mp1v,vb=320,width=480,height=384,fps=25,acodec=mp3,ab=128,samplerate=44100"
 
 #
 # Good quality:
@@ -121,7 +121,7 @@ vlc_exe                   = "/usr/bin/cvlc"
 # The following VLC options produce a good quality H264 stream for Tablets and Smart Phones. This one is tested on a
 # Intel ATOM C2750. This also streams without problems over a 3G network to my cellphone.
 #
-vlc_stream_options        = "venc=x264,vcodec=h264,width=720,height=576,fps=25,acodec=mp3,ab=128,samplerate=44100"
+vlc_stream_options_good   = "venc=x264,vcodec=h264,width=720,height=576,fps=25,acodec=mp3,ab=128,samplerate=44100"
 
 #
 # VLC stream bindings
@@ -201,8 +201,31 @@ def html_header():
 
     return html
 
-def html_menu(active_channel,active_channel_name):
-    html = "<form>\n"
+def html_menu(vlc_quality,active_channel,active_channel_name):
+    html = "<script language=\"javascript\">\n"
+    html += "function change_quality() {\n"
+    html += "    qs = document.quality_select.quality_selection.options[document.quality_select.quality_selection.selectedIndex].value;\n"
+    html += "    location.href='/quality='+qs;\n}\n"
+    html += "</script>\n\n"
+    html += "<form name=\"quality_select\">\n"
+    html += "<b>Transcoding quality:</b>\n&nbsp\n"
+    html += "<select name=\"quality_selection\" onChange=\"javascript:change_quality();\">\n"
+
+    if vlc_quality == "poor":
+        html += "<option value=poor selected>poor</option>\n"
+        html += "<option value=medium>medium</option>\n"
+        html += "<option value=good>good</option>\n"
+    elif vlc_quality == "medium":
+        html += "<option value=poor>poor</option>\n"
+        html += "<option value=medium selected>medium</option>\n"
+        html += "<option value=good>good</option>\n"
+    else:
+        html += "<option value=poor>poor</option>\n"
+        html += "<option value=medium>medium</option>\n"
+        html += "<option value=good selected>good</option>\n"
+    html += "</select>\n</form>\n"
+
+    html += "<form>\n"
 
     html += "<input type=button value='refresh bouquet list' onClick=location.href='/refresh=bouquet'>\n"
     html += "<input type=button value='refresh channel list' onClick=location.href='/refresh=channel'>\n"
@@ -240,6 +263,9 @@ class App:
         self.bouquet_id = 0
         self.bouquet_name = None
         self.bouquet_ref = None
+
+        self.vlc_quality = "good"
+
 
     def daemonize(self):
         """
@@ -464,7 +490,43 @@ class App:
                     if self.rc_res:
                         html += r_channels.list_channels()
 
-                    html += html_menu(active_channel,active_channel_name)
+                    html += html_menu(self.vlc_quality,active_channel,active_channel_name)
+                    html += html_footer()
+
+                    write_data = "HTTP/1.1 200 OK\n"
+                    write_data += "Content-Length: %d\n" % len(html)
+                    write_data += "Content-Type: text/html\n\n"
+                    write_data += html
+
+                    c.send(write_data)
+                elif page[:8] == "/quality":
+                    """
+                    Expected parameters: /quality=<poor|medium|good>
+                    """
+
+                    q_str = page.split('=')[1]
+
+                    if q_str == "poor":
+                        self.vlc_quality = "poor"
+                    elif q_str == "medium":
+                        self.vlc_quality = "medium"
+                    else:
+                        self.vlc_quality = "good"
+
+                    if debug:
+                        log("[App::run] debug: quality changed to [" + q_str + "]")
+
+                    html = html_header()
+
+                    if self.rb_res:
+                        html += r_bouquets.list_bouquets()
+                    else:
+                        html += "<b>Error: could not get bouquet list!</b>"
+
+                    if self.rc_res:
+                        html += r_channels.list_channels()
+
+                    html += html_menu(self.vlc_quality,active_channel,active_channel_name)
                     html += html_footer()
 
                     write_data = "HTTP/1.1 200 OK\n"
@@ -493,7 +555,7 @@ class App:
                         else:
                             html += "<b>Error: could not get bouquet list!</b>"
 
-                        html += html_menu(active_channel,active_channel_name)
+                        html += html_menu(self.vlc_quality,active_channel,active_channel_name)
                         html += "<b>Error: bouquet id is invalid!</b><br>"
                         html += html_footer()
 
@@ -513,7 +575,7 @@ class App:
                         else:
                             html += "<b>Error: could not get bouquet list!</b>"
 
-                        html += html_menu(active_channel,active_channel_name)
+                        html += html_menu(self.vlc_quality,active_channel,active_channel_name)
                         html += "<b>Error: bouquetplaylist id is not in range between 0 and 999!</b><br>"
                         html += html_footer()
 
@@ -544,7 +606,7 @@ class App:
                     if self.rc_res:
                         html += r_channels.list_channels()
 
-                    html += html_menu(active_channel,active_channel_name)
+                    html += html_menu(self.vlc_quality,active_channel,active_channel_name)
                     html += html_footer()
 
                     write_data = "HTTP/1.1 200 OK\n"
@@ -573,7 +635,7 @@ class App:
                         else:
                             html += "<b>Error: could not get bouquet list!</b>"
 
-                        html += html_menu(active_channel,active_channel_name)
+                        html += html_menu(self.vlc_quality,active_channel,active_channel_name)
                         html += "<b>Error: playlist id is invalid!</b><br>"
                         html += html_footer()
 
@@ -593,7 +655,7 @@ class App:
                         else:
                             html += "<b>Error: could not get bouquet list!</b>"
 
-                        html += html_menu(active_channel,active_channel_name)
+                        html += html_menu(self.vlc_quality,active_channel,active_channel_name)
                         html += "<b>Error: playlist id is not in range between 0 and 999!</b><br>"
                         html += html_footer()
 
@@ -613,7 +675,7 @@ class App:
                         html += "<b>Error: could not get bouquet list!</b>"
 
                     # play the selected channel
-                    r_channels.play_channel(id)
+                    r_channels.play_channel(id,self.vlc_quality)
 
                     # get current active channels
                     active_channel = r_channels.get_active_channel()
@@ -622,7 +684,7 @@ class App:
                     if self.rc_res:
                         html += r_channels.list_channels()
 
-                    html += html_menu(active_channel,active_channel_name)
+                    html += html_menu(self.vlc_quality,active_channel,active_channel_name)
                     html += html_footer()
 
                     write_data = "HTTP/1.1 200 OK\n"
@@ -660,7 +722,7 @@ class App:
                         if self.rc_res:
                             html += r_channels.list_channels()
 
-                        html += html_menu(active_channel,active_channel_name)
+                        html += html_menu(self.vlc_quality,active_channel,active_channel_name)
 
                         if not stop_res:
                             html += "<b>Error: unable to stop stream, nothing is playing!</b><br>\n"
@@ -677,7 +739,7 @@ class App:
                         if self.rc_res:
                             html += r_channels.list_channels()
 
-                        html += html_menu(active_channel,active_channel_name)
+                        html += html_menu(self.vlc_quality,active_channel,active_channel_name)
                         html += html_footer()
 
                     write_data = "HTTP/1.1 200 OK\n"
@@ -711,7 +773,7 @@ class App:
                     else:
                         html += "<b>Error: could not get bouquet list!</b>"
 
-                    html += html_menu(active_channel,active_channel_name)
+                    html += html_menu(self.vlc_quality,active_channel,active_channel_name)
                     html += html_footer()
 
                     write_data = "HTTP/1.1 200 OK\n"
@@ -1112,7 +1174,7 @@ class Channels(object):
 
         return html
 
-    def play_channel(self,id):
+    def play_channel(self,id,vlc_quality):
         """
         Function which launches the vlc transcoding process with the selected stream
         """
@@ -1134,7 +1196,12 @@ class Channels(object):
             log("[Channels::play_channel] debug: transcoding channel id[%d" % id + "] / name[" + self.channels[id].name  + "] / stream[" + self.channels[id].stream + "]")
 
         # construct the VLC command
-        cmd = vlc_exe + " \"" + self.channels[id].stream + "\" --sout '#transcode{" + vlc_stream_options  + "}:standard{access=http,mux=ts,dst=" + vlc_http_stream_bind_addr + ":%d}'" % vlc_http_stream_bind_port # + " > /dev/null 2>&1 &"
+        if vlc_quality == "poor":
+            cmd = vlc_exe + " \"" + self.channels[id].stream + "\" --sout '#transcode{" + vlc_stream_options_poor  + "}:standard{access=http,mux=ts,dst=" + vlc_http_stream_bind_addr + ":%d}'" % vlc_http_stream_bind_port # + " > /dev/null 2>&1 &"
+        elif vlc_quality == "medium":
+            cmd = vlc_exe + " \"" + self.channels[id].stream + "\" --sout '#transcode{" + vlc_stream_options_medium  + "}:standard{access=http,mux=ts,dst=" + vlc_http_stream_bind_addr + ":%d}'" % vlc_http_stream_bind_port # + " > /dev/null 2>&1 &"
+        else:
+            cmd = vlc_exe + " \"" + self.channels[id].stream + "\" --sout '#transcode{" + vlc_stream_options_good  + "}:standard{access=http,mux=ts,dst=" + vlc_http_stream_bind_addr + ":%d}'" % vlc_http_stream_bind_port # + " > /dev/null 2>&1 &"
 
         if debug == 1:
             log("[Channels::play_channel] debug: launching transcoding process with command [" + cmd + "]")

@@ -67,19 +67,10 @@ Edit openetv.py with your favorite editor and configure the following options:
 OpenETV directory:
 Set the openetv_dir variable to the directory path where openetv.py and it's other files are located.
 
-Transcoding options:
-Transcoding is a heavy CPU intensive process so you need a PC with enough power to suit your needs.
-In the source code header there are 3 transcoding options in the VLC stream section, named vlc_stream_options:
-  1) Poor quality (this one I used on my old Intel Atom 330 fileserver and stream it over a 3G network to my Smartphone)
-  2) Medium quality (I also used this one on my Intel ATOM C2750 with 4 threads enabled instead of 8)
-  3) Good quality (this one I use on my Intel ATOM C2750 and stream it over a 3G network to my Smartphone)
-Choose one of them by comment/uncomment the selected option. Or if you have other needs configure the VLC
-stream option by yourself.
-
 Enigma host:
 Make sure the Enigma WebIf is enabled on your Dreambox or clone. If so, configure the ip address and the tcp port
 of your device in the following options, for example:
-enigma2_host     = "192.168.0.5"
+enigma2_host     = "192.168.0.10"
 enigma2_port     = 80
 
 If you use https, and for example on port 443, set the enigma2_use_ssl variable to "yes": 
@@ -97,13 +88,20 @@ Set the correct vlc executable path (default is Linux) by comment/uncommenting t
 Start OpenETV
 -------------
 $ ./openetv.py start
-
 Note: it's not recommended to start openetv as root. Instead create a service account and run openetv with
 reduced privileges.
 
 Launch your browser and go to: "http://<openetv-host>:8081".
 
-Select your bouquet and channel, and click on the "start stream" button. Then launch VLC on your client device
+Select your bouquet and channel.
+
+Select one of the transcoding options:
+  1) Poor quality (this one I used on my old Intel Atom 330 fileserver and stream it over a 3G network to my Smartphone)
+  2) Medium quality (I also used this one on my Intel ATOM C2750 with 4 threads enabled instead of 8)
+  3) Good quality (this one I use on my Intel ATOM C2750 and stream it over a 3G network to my Smartphone)
+Note: Transcoding is a heavy CPU intensive process so you need a PC with enough power to suit your needs.
+
+Click on the "start stream" button. Then launch VLC on your client device
 and connect it to "http://<openetv-host>:8080".
 
 If something went wrong you can check the openetv.log file for errors. If it doesn't have enough information
