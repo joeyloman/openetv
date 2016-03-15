@@ -17,7 +17,7 @@ OpenETV talks to the WebIF (Web Interface) of your Enigma2 device to select your
 For the time being it uses VLC to transcode the media and export a http stream.
 
 Theoretically this application should run cross-platform because it's written in Python. It only requires
-a proper Python/VLC installation. Linux (CentOS 6 and Fedora 20) and Mac OS X run this application
+a proper Python/VLC installation. Linux (CentOS 6, Fedora 23 and Ubuntu 14.04) and Mac OS X run this application
 successfully. Windows isn't tested yet, but should also work with a simular Python/VLC setup.
 
 
@@ -32,14 +32,14 @@ First install the required dependencies:
 
 Linux
 -----
-Note: the Linux install section is based and tested on CentOS 6 and Fedora 20. But if you want to run
+Note: the Linux install section is based and tested on CentOS 6 and Fedora 23. But if you want to run
 it on other distro's the steps below are similar except for the package installation part.
 
 To install the VLC packages on CentOS 6 you need to add the rpmfusion repo:
 $ sudo yum localinstall --nogpgcheck http://download1.rpmfusion.org/free/el/updates/6/x86_64/rpmfusion-free-release-6-1.noarch.rpm
 
-If you are running Fedora 20 do the following to add the rpmfusion repo:
-$ sudo yum localinstall http://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-20.noarch.rpm
+If you are running Fedora 23 do the following to add the rpmfusion repo:
+$ sudo yum localinstall http://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-23.noarch.rpm
 
 Install the VLC rpms:
 $ sudo yum install -y vlc
@@ -62,24 +62,25 @@ Edit openetv.py with your favorite editor and change the interpeter in openetv.p
 
 Configure OpenETV
 -----------------
-Edit openetv.py with your favorite editor and configure the following options:
+Edit config.ini with your favorite editor and configure the following options:
 
-OpenETV directory:
-Set the openetv_dir variable to the directory path where openetv.py and it's other files are located.
+OpenETV directory, logfile and pidfile:
+Set the openetv_dir variable to the directory path where OpenETV is located (for example: /opt/openetv).
+Set the openetv_logfile and openetv_pidfile variables to a directory path where the openetv process can write to.
 
 Enigma host:
 Make sure the Enigma WebIf is enabled on your Dreambox or clone. If so, configure the ip address and the tcp port
 of your device in the following options, for example:
-enigma2_host     = "192.168.0.10"
+enigma2_host     = 192.168.0.10
 enigma2_port     = 80
 
 If you use https, and for example on port 443, set the enigma2_use_ssl variable to "yes": 
 enigma2_port     = 443
-enigma2_use_ssl  = "yes"
+enigma2_use_ssl  = yes
 
 If you enabled authentication, set the enigma2_username and enigma2_password variables, for example:
-enigma2_username = "username"
-enigma2_password = "password"
+enigma2_username = username
+enigma2_password = password
 
 VLC executable path:
 Set the correct vlc executable path (default is Linux) by comment/uncommenting the vlc_exe variable.
