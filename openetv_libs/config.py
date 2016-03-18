@@ -11,6 +11,7 @@
 
 from ConfigParser import ConfigParser
 
+
 def get_config(config_file):
     config_obj = ConfigParser()
     config_obj.read(config_file)

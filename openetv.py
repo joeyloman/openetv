@@ -15,7 +15,7 @@ import sys
 import logging
 
 from openetv_libs import app, config, vlc
-#from openetv_libs.log import log
+# from openetv_libs.log import log
 
 
 if __name__ == "__main__":
@@ -24,15 +24,16 @@ if __name__ == "__main__":
 
     # check if the logo image file can be found
     if not os.path.isfile(openetv_config['openetv']['openetv_dir'] + "/openetv_images/logo-app.png"):
-        print "error: logo image file not found at \"" + openetv_config['openetv']['openetv_dir'] + "/openetv_images/logo-app.png" + "\""
+        print 'error: logo image file not found at "{}/openetv_images/logo-app.png"'.format(
+            openetv_config['openetv']['openetv_dir'])
         print "       maybe the openetv_dir variable isn't configured correctly?"
         sys.exit(2)
 
     # check if we can write the OpenETV logfile
     try:
-        f = open(openetv_config['openetv']['openetv_logfile'],'a')
+        f = open(openetv_config['openetv']['openetv_logfile'], 'a')
     except IOError:
-        print "error: cannot write to logfile \"" + openetv_config['openetv']['openetv_logfile'] + "\""
+        print 'error: cannot write to logfile "{}"'.format(openetv_config['openetv']['openetv_logfile'])
         sys.exit(2)
 
     if openetv_config['openetv']['debug'] == "true":
@@ -42,23 +43,23 @@ if __name__ == "__main__":
 
     # check if we can write the OpenETV pidfile
     try:
-        f = open(openetv_config['openetv']['openetv_pidfile'],'a')
+        f = open(openetv_config['openetv']['openetv_pidfile'], 'a')
     except IOError:
-        print "error: cannot write to pidfile \"" + openetv_config['openetv']['openetv_pidfile'] + "\""
+        print 'error: cannot write to pidfile "{}"'.format(openetv_config['openetv']['openetv_logfile'])
         sys.exit(2)
 
     # check if we can write the VLC pidfile
     try:
-        f = open(openetv_config['vlc']['vlc_pidfile'],'a')
+        f = open(openetv_config['vlc']['vlc_pidfile'], 'a')
     except IOError:
-        print "error: cannot write to pidfile \"" + openetv_config['vlc']['vlc_pidfile'] + "\""
+        print 'error: cannot write to pidfile "{}"'.format(openetv_config['vlc']['vlc_pidfile'])
         sys.exit(2)
 
     vlc.remove_vlc_pid(openetv_config['vlc']['vlc_pidfile'])
 
     # check if the vlc executable exists
     if not os.path.isfile(openetv_config['vlc']['vlc_exe']):
-        print "error: vlc executable not found at \"" + openetv_config['vlc']['vlc_exe'] + "\""
+        print 'error: vlc executable not found at "{}"'.format(openetv_config['vlc']['vlc_exe'])
         sys.exit(2)
 
     openetv = app.App(openetv_config, logging)
