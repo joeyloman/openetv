@@ -17,6 +17,7 @@ import logging
 from openetv_libs import app, config, vlc
 #from openetv_libs.log import log
 
+
 if __name__ == "__main__":
     # get the configuration
     openetv_config = config.get_config('config.ini')
@@ -34,8 +35,6 @@ if __name__ == "__main__":
         print "error: cannot write to logfile \"" + openetv_config['openetv']['openetv_logfile'] + "\""
         sys.exit(2)
 
-    f.close
-
     if openetv_config['openetv']['debug'] == "true":
         logging.basicConfig(filename=openetv_config['openetv']['openetv_logfile'], level=logging.DEBUG)
     else:
@@ -48,8 +47,6 @@ if __name__ == "__main__":
         print "error: cannot write to pidfile \"" + openetv_config['openetv']['openetv_pidfile'] + "\""
         sys.exit(2)
 
-    f.close
-
     # check if we can write the VLC pidfile
     try:
         f = open(openetv_config['vlc']['vlc_pidfile'],'a')
@@ -57,7 +54,6 @@ if __name__ == "__main__":
         print "error: cannot write to pidfile \"" + openetv_config['vlc']['vlc_pidfile'] + "\""
         sys.exit(2)
 
-    f.close
     vlc.remove_vlc_pid(openetv_config['vlc']['vlc_pidfile'])
 
     # check if the vlc executable exists
