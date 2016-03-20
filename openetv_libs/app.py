@@ -151,7 +151,7 @@ class App(object):
         if not pid:
             message = "pidfile %s does not exist..daemon not running?\n"
             sys.stderr.write(message % self.pidfile)
-            return # not an error in a restart
+            return None# not an error in a restart
 
         # try killing the daemon process    
         try:
