@@ -1,4 +1,11 @@
 from ConfigParser import ConfigParser
+import sys
+
+
+class OpenError(Exception):
+    def __init__(self, msg):
+        print msg
+        sys.exit(2)
 
 
 def get_config(config_file):
@@ -15,3 +22,10 @@ def get_config(config_file):
                 config[section] = {item[0]: val}
 
     return config
+
+
+def open_file(path, mode, errormsg):
+    try:
+        return open(path, mode)
+    except IOError:
+        raise OpenError(errormsg)

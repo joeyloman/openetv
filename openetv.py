@@ -14,48 +14,26 @@ import os
 import sys
 import logging
 
-import openetv_libs.helpers
-from openetv_libs import app, vlc
+from openetv_libs import helpers
+from openetv_libs import app
 
 
 if __name__ == "__main__":
     # get the configuration
-    openetv_config = openetv_libs.helpers.get_config('config.ini')
-
-    # check if the logo image file can be found
-    if not os.path.isfile(openetv_config['openetv']['openetv_dir'] + "/openetv_images/logo-app.png"):
-        print 'error: logo image file not found at "{}/openetv_images/logo-app.png"'.format(
-            openetv_config['openetv']['openetv_dir'])
-        print "       maybe the openetv_dir variable isn't configured correctly?"
-        sys.exit(2)
-
-    # check if we can write the OpenETV logfile
-    try:
-        f = open(openetv_config['openetv']['openetv_logfile'], 'a')
-    except IOError:
-        print 'error: cannot write to logfile "{}"'.format(openetv_config['openetv']['openetv_logfile'])
-        sys.exit(2)
+    openetv_config = helpers.get_config('config.ini')
+    logfile = openetv_config['openetv']['openetv_logfile']
 
     if openetv_config['openetv']['debug'] == "true":
         logging.basicConfig(filename=openetv_config['openetv']['openetv_logfile'], level=logging.DEBUG)
     else:
         logging.basicConfig(filename=openetv_config['openetv']['openetv_logfile'], level=logging.INFO)
 
-    # check if we can write the OpenETV pidfile
-    try:
-        f = open(openetv_config['openetv']['openetv_pidfile'], 'a')
-    except IOError:
-        print 'error: cannot write to pidfile "{}"'.format(openetv_config['openetv']['openetv_logfile'])
+    # check if the logo image file can be found TODO: don't check for existence, just assume its there and handle it
+    if not os.path.isfile(openetv_config['openetv']['openetv_dir'] + "/openetv_images/logo-app.png"):
+        print 'error: logo image file not found at "{}/openetv_images/logo-app.png"'.format(
+            openetv_config['openetv']['openetv_dir'])
+        print "       maybe the openetv_dir variable isn't configured correctly?"
         sys.exit(2)
-
-    # check if we can write the VLC pidfile
-    try:
-        f = open(openetv_config['vlc']['vlc_pidfile'], 'a')
-    except IOError:
-        print 'error: cannot write to pidfile "{}"'.format(openetv_config['vlc']['vlc_pidfile'])
-        sys.exit(2)
-
-    vlc.remove_vlc_pid(openetv_config['vlc']['vlc_pidfile'])
 
     # check if the vlc executable exists
     if not os.path.isfile(openetv_config['vlc']['vlc_exe']):
