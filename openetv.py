@@ -13,6 +13,7 @@
 import os
 import sys
 import logging
+import argparse
 
 from openetv_libs import helpers
 from openetv_libs import app
@@ -41,19 +42,14 @@ if __name__ == "__main__":
         sys.exit(2)
 
     openetv = app.App(openetv_config, logging)
-    if len(sys.argv) == 2:
-        if 'start' == sys.argv[1]:
-            logging.info("[Main] OpenETV started.")
-            openetv.start()
-        elif 'stop' == sys.argv[1]:
-            logging.info("[Main] OpenETV stopped.")
-            openetv.stop()
-        elif 'restart' == sys.argv[1]:
-            logging.info("[Main] OpenETV restarted.")
-            openetv.restart()
-        else:
-            print "usage: %s start|stop|restart" % sys.argv[0]
-            sys.exit(2)
-    else:
-        print "usage: %s start|stop|restart" % sys.argv[0]
-        sys.exit(2)
+
+    action_dict = {
+        'start': openetv.start,
+        'stop': openetv.stop,
+        'restart': openetv.restart,
+    }
+
+    parser = argparse.ArgumentParser(prog='OpenEtv')
+    parser.add_argument('action', choices=('start', 'stop', 'restart'))
+    args = parser.parse_args()
+    action_dict[args.action]()

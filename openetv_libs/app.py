@@ -107,6 +107,7 @@ class App(object):
         Start the daemon
         """
 
+        self.logging.info("[Main] OpenETV started.")
         self.logging.debug("[App::start] debug: entering function")
 
         # check for a pidfile to see if the daemon already runs
@@ -134,6 +135,7 @@ class App(object):
         Stop the daemon
         """
 
+        self.logging.info("[Main] OpenETV stopped.")
         self.logging.debug("[App::stop] debug: entering function")
 
         # check if VLC is running and kill it
@@ -179,6 +181,7 @@ class App(object):
         Restart the daemon
         """
 
+        self.logging.info("[Main] OpenETV restarted.")
         self.logging.debug("[App::restart] debug: entering function")
 
         self.stop()
