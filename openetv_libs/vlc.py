@@ -11,23 +11,22 @@
 
 import os
 
+
 def get_vlc_pid(pidfile, logging):
     try:
-        f = open(pidfile, 'r')
+        with open(pidfile, 'r') as f:
+            pid = int(f.read())
+            logging.debug("[getvlcpid] debug: VLC pid = %d" % int(pid))
+            return pid
     except:
         return None
 
-    pid = f.read()
-    f.close
-
-    logging.debug("[getvlcpid] debug: VLC pid = %d" % int(pid))
-
-    return int(pid)
 
 def write_vlc_pid(pidfile, pid):
     f = open(pidfile, 'w')
     f.write("%d" % pid)
     f.close()
+
 
 def remove_vlc_pid(pidfile):
     os.remove(pidfile)

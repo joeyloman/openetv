@@ -27,13 +27,11 @@ class App(object):
     def __init__(self, openetv_config, logging):
         self.openetv_config = openetv_config
         self.logging = logging
-
-        self.pidfile = self.openetv_config['openetv']['openetv_pidfile']
-        self.vlc_pidfile = self.openetv_config['vlc']['vlc_pidfile']
-
+        self.pidfile = openetv_config['openetv']['openetv_pidfile']
+        self.vlc_pidfile = openetv_config['vlc']['vlc_pidfile']
         self.stdin = os.devnull
-        self.stdout = self.openetv_config['openetv']['openetv_logfile']
-        self.stderr = self.openetv_config['openetv']['openetv_logfile']
+        self.stdout = openetv_config['openetv']['openetv_logfile']
+        self.stderr = openetv_config['openetv']['openetv_logfile']
 
     def daemonize(self):
         """
