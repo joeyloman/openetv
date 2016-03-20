@@ -15,6 +15,7 @@ import atexit
 import sys
 import signal
 from vlc import remove_vlc_pid
+from openetv_libs.helpers import open_file
 from signal import SIGTERM
 
 from openetv_libs import webserver, vlc
@@ -41,15 +42,6 @@ class App(object):
         """
 
         self.logging.debug("[App::daemonize] debug: entering function")
-
-        # check if we can write the pidfile
-        try:
-            f = open(self.pidfile, 'w+')
-        except IOError:
-            print "error: cannot write the pidfile \"" + self.pidfile + "\""
-            sys.exit(2)
-
-        f.close
 
         # do first fork
         try: 
@@ -89,8 +81,9 @@ class App(object):
         # write pidfile
         atexit.register(self.delpid)
         pid = str(os.getpid())
-        file(self.pidfile,'w+').write("%s\n" % pid)
-    
+        with open_file(self.pidfile, 'w+', 'Cannot write to pidfile {}'.format(self.pid)) as f:
+            f.write(pid)
+
     def delpid(self):
         """
         Remove the pidfile
