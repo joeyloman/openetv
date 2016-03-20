@@ -9,16 +9,16 @@
 # See files COPYING.GPL2 and COPYING.GPL3 for License information.
 #
 
-import socket
 import time
 import os
 import atexit
 import sys
 import signal
-
-from signal import SIGTERM, SIGKILL
+from vlc import remove_vlc_pid
+from signal import SIGTERM
 
 from openetv_libs import webserver, vlc
+
 
 class App(object):
     """

@@ -10,22 +10,19 @@
 #
 
 import os
+from openetv_libs.helpers import open_file
 
 
 def get_vlc_pid(pidfile, logging):
-    try:
-        with open(pidfile, 'r') as f:
-            pid = int(f.read())
-            logging.debug("[getvlcpid] debug: VLC pid = %d" % int(pid))
-            return pid
-    except:
-        return None
+    with open_file(pidfile, 'r', 'Could not read pidfile {}'.format(pidfile)) as f:
+        pid = int(f.read())
+        logging.debug("[getvlcpid] debug: VLC pid = %d" % int(pid))
+        return pid
 
 
 def write_vlc_pid(pidfile, pid):
-    f = open(pidfile, 'w')
-    f.write("%d" % pid)
-    f.close()
+    with open_file(pidfile, 'w', 'Could not write pidfile {}'.format(pidfile)) as f:
+        f.write(pid)
 
 
 def remove_vlc_pid(pidfile):
