@@ -14,13 +14,13 @@ import os
 import sys
 import logging
 
-from openetv_libs import app, config, vlc
-# from openetv_libs.log import log
+import openetv_libs.helpers
+from openetv_libs import app, vlc
 
 
 if __name__ == "__main__":
     # get the configuration
-    openetv_config = config.get_config('config.ini')
+    openetv_config = openetv_libs.helpers.get_config('config.ini')
 
     # check if the logo image file can be found
     if not os.path.isfile(openetv_config['openetv']['openetv_dir'] + "/openetv_images/logo-app.png"):
