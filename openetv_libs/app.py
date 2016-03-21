@@ -118,7 +118,7 @@ class App(object):
             sys.exit(1)
         
         # start the daemon
-        #self.daemonize()
+        self.daemonize()
         self.run()
 
     def stop(self):
