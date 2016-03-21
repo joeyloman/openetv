@@ -7,15 +7,15 @@ import os
 
 class TestHelpers(object):
     @classmethod
-    def setup_class(self):
-        self.pidfile = tempfile.mkstemp()[1]
-        with open(self.pidfile, 'w') as f:
+    def setup_class(cls):
+        cls.pidfile = tempfile.mkstemp()[1]
+        with open(cls.pidfile, 'w') as f:
             f.write('15')
 
     @classmethod
-    def delete_class(self):
+    def delete_class(cls):
         try:
-            os.remove(self.pidfile)
+            os.remove(cls.pidfile)
         except OSError:
             pass
 
@@ -67,4 +67,5 @@ class TestHelpers(object):
                 assert f.read() == '15'
         finally:
             os.remove(pfile)
+
 
