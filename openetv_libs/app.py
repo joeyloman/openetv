@@ -118,7 +118,7 @@ class App(object):
             sys.exit(1)
         
         # start the daemon
-        self.daemonize()
+        #self.daemonize()
         self.run()
 
     def stop(self):
@@ -133,8 +133,8 @@ class App(object):
         pid = vlc.get_vlc_pid(self.vlc_pidfile, self.logging)
         if pid:
             try:
-                # shutdown VLC (in some circumstances VLC doesn't shutdown properly. that's why we always send the SIGKILL signal).
-                os.kill(pid, signal.SIGKILL)
+                # shutdown VLC
+                os.kill(pid, signal.SIGTERM)
                 remove_vlc_pid(self.vlc_pidfile)
             except:
                 # VLC is not running, remove the pidfile
