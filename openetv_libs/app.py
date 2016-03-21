@@ -25,6 +25,7 @@ class App(object):
     """
     Main application class
     """
+
     def __init__(self, openetv_config, logging):
         self.openetv_config = openetv_config
         self.logging = logging
@@ -44,31 +45,31 @@ class App(object):
         self.logging.debug("[App::daemonize] debug: entering function")
 
         # do first fork
-        try: 
-            pid = os.fork() 
+        try:
+            pid = os.fork()
             if pid > 0:
                 # exit first parent
-                sys.exit(0) 
-        except OSError, e: 
+                sys.exit(0)
+        except OSError, e:
             sys.stderr.write("Error fork #1 failed: %d (%s)\n" % (e.errno, e.strerror))
             sys.exit(1)
-    
+
         # decouple from parent environment
-        os.chdir("/") 
-        os.setsid() 
-        os.umask(0) 
-    
+        os.chdir("/")
+        os.setsid()
+        os.umask(0)
+
         # do second fork
-        try: 
-            pid = os.fork() 
+        try:
+            pid = os.fork()
             if pid > 0:
                 # exit from second parent
-                sys.exit(0) 
-        except OSError, e: 
+                sys.exit(0)
+        except OSError, e:
             sys.stderr.write("Error fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
-            sys.exit(1) 
-    
-        # redirect standard file descriptors
+            sys.exit(1)
+
+            # redirect standard file descriptors
         sys.stdout.flush()
         sys.stderr.flush()
         si = file(self.stdin, 'r')
@@ -77,7 +78,7 @@ class App(object):
         os.dup2(si.fileno(), sys.stdin.fileno())
         os.dup2(so.fileno(), sys.stdout.fileno())
         os.dup2(se.fileno(), sys.stderr.fileno())
-    
+
         # write pidfile
         atexit.register(self.delpid)
         pid = str(os.getpid())
@@ -103,7 +104,7 @@ class App(object):
 
         # check for a pidfile to see if the daemon already runs
         try:
-            pf = file(self.pidfile,'r')
+            pf = file(self.pidfile, 'r')
             try:
                 pid = int(pf.read().strip())
             except ValueError:
@@ -111,12 +112,12 @@ class App(object):
             pf.close()
         except IOError:
             pid = None
-    
+
         if pid:
             message = "pidfile %s already exist..daemon already running?\n"
             sys.stderr.write(message % self.pidfile)
             sys.exit(1)
-        
+
         # start the daemon
         self.daemonize()
         self.run()
@@ -132,7 +133,7 @@ class App(object):
         # check if VLC is running and kill it
         try:
             pid = vlc.get_vlc_pid(self.vlc_pidfile, self.logging)
-        except:
+        except IOError:
             pid = None
 
         if pid:
@@ -140,22 +141,22 @@ class App(object):
                 # shutdown VLC
                 os.kill(pid, signal.SIGTERM)
                 remove_vlc_pid(self.vlc_pidfile)
-            except:
+            except IOError:
                 # VLC is not running, remove the pidfile
                 remove_vlc_pid(self.vlc_pidfile)
 
         # get the pid from the pidfile
         try:
-            pf = file(self.pidfile,'r')
+            pf = file(self.pidfile, 'r')
             pid = int(pf.read().strip())
             pf.close()
         except IOError:
             pid = None
-    
+
         if not pid:
             message = "pidfile %s does not exist..daemon not running?\n"
             sys.stderr.write(message % self.pidfile)
-            return None# not an error in a restart
+            return None  # not an error in a restart
 
         # try killing the daemon process    
         try:

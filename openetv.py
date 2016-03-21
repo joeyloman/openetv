@@ -58,6 +58,6 @@ if __name__ == "__main__":
     except Exception as err:
         try:
             print err.extra_info
-        except:
+        except AttributeError:
             print "no extra_info!"
         sys.exit(1)
