@@ -20,6 +20,7 @@ def get_vlc_pid(pidfile, logging):
     logging.debug("[getvlcpid] debug: VLC pid = %d" % int(pid))
     return pid
 
+
 def write_vlc_pid(pidfile, pid):
     with open_file(pidfile, 'w', 'Could not write pidfile {}'.format(pidfile)) as f:
         f.write(str(pid))
