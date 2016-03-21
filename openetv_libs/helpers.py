@@ -17,7 +17,7 @@ def get_config(config_file):
     return config
 
 
-def open_file(path, mode, errormsg):
+def open_file(path, mode, errormsg=None):
     try:
         return open(path, mode)
     except IOError as err:
