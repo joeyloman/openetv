@@ -1,5 +1,6 @@
 from openetv_libs import vlc
 from openetv_libs import helpers
+import ConfigParser
 import tempfile
 import logging
 import os
@@ -69,3 +70,30 @@ class TestHelpers(object):
             os.remove(pfile)
 
 
+class TestConfig(object):
+    @classmethod
+    def setup_class(cls):
+        config = ConfigParser.RawConfigParser()
+        config.add_section('section1')
+        config.set('section1', 'key1', 'val1')
+        config.add_section('section2')
+        config.set('section2', 'key2', 'val2')
+        cls.cfg_file = tempfile.mkstemp()[1]
+        with open(cls.cfg_file, 'w') as f:
+            config.write(f)
+
+    @classmethod
+    def teardown_class(cls):
+        try:
+            os.remove(cls.cfg_file)
+        except IOError:
+            pass
+
+
+    def test_read_section(self):
+        cfg = helpers.get_config(self.cfg_file)
+        assert 'section2' in cfg
+
+    def test_read_section_contents(self):
+        cfg = helpers.get_config(self.cfg_file)
+        assert 'key2' in cfg['section2']
