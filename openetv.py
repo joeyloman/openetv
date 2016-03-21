@@ -13,72 +13,43 @@
 import os
 import sys
 import logging
+import argparse
 
-from openetv_libs import app, config, vlc
-#from openetv_libs.log import log
+from openetv_libs import helpers
+from openetv_libs import app
+
 
 if __name__ == "__main__":
     # get the configuration
-    openetv_config = config.get_config('config.ini')
-
-    # check if the logo image file can be found
-    if not os.path.isfile(openetv_config['openetv']['openetv_dir'] + "/openetv_images/logo-app.png"):
-        print "error: logo image file not found at \"" + openetv_config['openetv']['openetv_dir'] + "/openetv_images/logo-app.png" + "\""
-        print "       maybe the openetv_dir variable isn't configured correctly?"
-        sys.exit(2)
-
-    # check if we can write the OpenETV logfile
-    try:
-        f = open(openetv_config['openetv']['openetv_logfile'],'a')
-    except IOError:
-        print "error: cannot write to logfile \"" + openetv_config['openetv']['openetv_logfile'] + "\""
-        sys.exit(2)
-
-    f.close
+    openetv_config = helpers.get_config('config.ini')
+    logfile = openetv_config['openetv']['openetv_logfile']
 
     if openetv_config['openetv']['debug'] == "true":
         logging.basicConfig(filename=openetv_config['openetv']['openetv_logfile'], level=logging.DEBUG)
     else:
         logging.basicConfig(filename=openetv_config['openetv']['openetv_logfile'], level=logging.INFO)
 
-    # check if we can write the OpenETV pidfile
-    try:
-        f = open(openetv_config['openetv']['openetv_pidfile'],'a')
-    except IOError:
-        print "error: cannot write to pidfile \"" + openetv_config['openetv']['openetv_pidfile'] + "\""
+    # check if the logo image file can be found TODO: don't check for existence, just assume its there and handle it
+    if not os.path.isfile(openetv_config['openetv']['openetv_dir'] + "/openetv_images/logo-app.png"):
+        print 'error: logo image file not found at "{}/openetv_images/logo-app.png"'.format(
+            openetv_config['openetv']['openetv_dir'])
+        print "       maybe the openetv_dir variable isn't configured correctly?"
         sys.exit(2)
-
-    f.close
-
-    # check if we can write the VLC pidfile
-    try:
-        f = open(openetv_config['vlc']['vlc_pidfile'],'a')
-    except IOError:
-        print "error: cannot write to pidfile \"" + openetv_config['vlc']['vlc_pidfile'] + "\""
-        sys.exit(2)
-
-    f.close
-    vlc.remove_vlc_pid(openetv_config['vlc']['vlc_pidfile'])
 
     # check if the vlc executable exists
     if not os.path.isfile(openetv_config['vlc']['vlc_exe']):
-        print "error: vlc executable not found at \"" + openetv_config['vlc']['vlc_exe'] + "\""
+        print 'error: vlc executable not found at "{}"'.format(openetv_config['vlc']['vlc_exe'])
         sys.exit(2)
 
     openetv = app.App(openetv_config, logging)
-    if len(sys.argv) == 2:
-        if 'start' == sys.argv[1]:
-            logging.info("[Main] OpenETV started.")
-            openetv.start()
-        elif 'stop' == sys.argv[1]:
-            logging.info("[Main] OpenETV stopped.")
-            openetv.stop()
-        elif 'restart' == sys.argv[1]:
-            logging.info("[Main] OpenETV restarted.")
-            openetv.restart()
-        else:
-            print "usage: %s start|stop|restart" % sys.argv[0]
-            sys.exit(2)
-    else:
-        print "usage: %s start|stop|restart" % sys.argv[0]
-        sys.exit(2)
+
+    action_dict = {
+        'start': openetv.start,
+        'stop': openetv.stop,
+        'restart': openetv.restart,
+    }
+
+    parser = argparse.ArgumentParser(prog='OpenEtv')
+    parser.add_argument('action', choices=('start', 'stop', 'restart'))
+    args = parser.parse_args()
+    action_dict[args.action]()

@@ -9,16 +9,17 @@
 # See files COPYING.GPL2 and COPYING.GPL3 for License information.
 #
 
-import socket
 import time
 import os
 import atexit
 import sys
 import signal
-
-from signal import SIGTERM, SIGKILL
+from vlc import remove_vlc_pid
+from openetv_libs.helpers import open_file
+from signal import SIGTERM
 
 from openetv_libs import webserver, vlc
+
 
 class App(object):
     """
@@ -27,13 +28,11 @@ class App(object):
     def __init__(self, openetv_config, logging):
         self.openetv_config = openetv_config
         self.logging = logging
-
-        self.pidfile = self.openetv_config['openetv']['openetv_pidfile']
-        self.vlc_pidfile = self.openetv_config['vlc']['vlc_pidfile']
-
+        self.pidfile = openetv_config['openetv']['openetv_pidfile']
+        self.vlc_pidfile = openetv_config['vlc']['vlc_pidfile']
         self.stdin = os.devnull
-        self.stdout = self.openetv_config['openetv']['openetv_logfile']
-        self.stderr = self.openetv_config['openetv']['openetv_logfile']
+        self.stdout = openetv_config['openetv']['openetv_logfile']
+        self.stderr = openetv_config['openetv']['openetv_logfile']
 
     def daemonize(self):
         """
@@ -43,15 +42,6 @@ class App(object):
         """
 
         self.logging.debug("[App::daemonize] debug: entering function")
-
-        # check if we can write the pidfile
-        try:
-            f = open(self.pidfile, 'w+')
-        except IOError:
-            print "error: cannot write the pidfile \"" + self.pidfile + "\""
-            sys.exit(2)
-
-        f.close
 
         # do first fork
         try: 
@@ -91,8 +81,9 @@ class App(object):
         # write pidfile
         atexit.register(self.delpid)
         pid = str(os.getpid())
-        file(self.pidfile,'w+').write("%s\n" % pid)
-    
+        with open_file(self.pidfile, 'w+', 'Cannot write to pidfile {}'.format(self.pid)) as f:
+            f.write(pid)
+
     def delpid(self):
         """
         Remove the pidfile
@@ -107,6 +98,7 @@ class App(object):
         Start the daemon
         """
 
+        self.logging.info("[Main] OpenETV started.")
         self.logging.debug("[App::start] debug: entering function")
 
         # check for a pidfile to see if the daemon already runs
@@ -134,6 +126,7 @@ class App(object):
         Stop the daemon
         """
 
+        self.logging.info("[Main] OpenETV stopped.")
         self.logging.debug("[App::stop] debug: entering function")
 
         # check if VLC is running and kill it
@@ -158,11 +151,11 @@ class App(object):
         if not pid:
             message = "pidfile %s does not exist..daemon not running?\n"
             sys.stderr.write(message % self.pidfile)
-            return # not an error in a restart
+            return None# not an error in a restart
 
         # try killing the daemon process    
         try:
-            while 1:
+            while True:
                 os.kill(pid, SIGTERM)
                 time.sleep(0.1)
         except OSError, err:
@@ -179,6 +172,7 @@ class App(object):
         Restart the daemon
         """
 
+        self.logging.info("[Main] OpenETV restarted.")
         self.logging.debug("[App::restart] debug: entering function")
 
         self.stop()
