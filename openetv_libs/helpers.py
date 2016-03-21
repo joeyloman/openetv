@@ -2,12 +2,6 @@ from ConfigParser import ConfigParser
 import sys
 
 
-class OpenError(Exception):
-    def __init__(self, msg):
-        print msg
-        sys.exit(2)
-
-
 def get_config(config_file):
     config_obj = ConfigParser()
     config_obj.read(config_file)
@@ -28,4 +22,5 @@ def open_file(path, mode, errormsg):
     try:
         return open(path, mode)
     except IOError:
-        raise OpenError(errormsg)
+        print errormsg
+        sys.exit(2)
