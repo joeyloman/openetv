@@ -1,5 +1,4 @@
 from ConfigParser import ConfigParser
-import sys
 
 
 def get_config(config_file):
@@ -21,6 +20,6 @@ def get_config(config_file):
 def open_file(path, mode, errormsg):
     try:
         return open(path, mode)
-    except IOError:
-        print errormsg
-        sys.exit(2)
+    except IOError as err:
+        err.extra_info = errormsg
+        raise
