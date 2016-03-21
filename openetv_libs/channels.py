@@ -260,13 +260,21 @@ class Channels(object):
             return None
 
         # shutdown VLC (in some circumstances VLC doesn't shutdown properly. that's why we always send the SIGKILL signal).
-        os.kill(vlc.get_vlc_pid(self.vlc_pidfile, self.logging), signal.SIGKILL)
+        try:
+            pid = vlc.get_vlc_pid(self.vlc_pidfile, self.logging)
+            os.kill(pid, signal.SIGKILL)
 
-        # wait for it, otherwise it turns into a zombie
-        self.vlc_proc.wait()
+            # wait for it, otherwise it turns into a zombie
+            self.vlc_proc.wait()
 
-        # remove the VLC pidfile
-        vlc.remove_vlc_pid(self.vlc_pidfile)
+            # remove the VLC pidfile
+            vlc.remove_vlc_pid(self.vlc_pidfile)
+        except IOError as error:
+            error.extra_info = "Could not read VLC pidfile"
+            raise
+        except OSError as error:
+            error.extra_info = "Could not kill the VLC process"
+            raise
 
         # set the active channel to "not active"
         self.active_channel = self.max_channels
