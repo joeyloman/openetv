@@ -52,4 +52,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='OpenEtv')
     parser.add_argument('action', choices=('start', 'stop', 'restart'))
     args = parser.parse_args()
-    action_dict[args.action]()
+
+    try:
+        action_dict[args.action]()
+    except IOError as err:
+        print err.extra_info
+        sys.exit(1)
