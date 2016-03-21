@@ -22,7 +22,7 @@ def get_vlc_pid(pidfile, logging):
 
 def write_vlc_pid(pidfile, pid):
     with open_file(pidfile, 'w', 'Could not write pidfile {}'.format(pidfile)) as f:
-        f.write(pid)
+        f.write(str(pid))
 
 
 def remove_vlc_pid(pidfile):
