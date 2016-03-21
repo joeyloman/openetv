@@ -81,7 +81,7 @@ class App(object):
         # write pidfile
         atexit.register(self.delpid)
         pid = str(os.getpid())
-        with open_file(self.pidfile, 'w+', 'Cannot write to pidfile {}'.format(self.pid)) as f:
+        with open_file(self.pidfile, 'w+', 'Cannot write to pidfile {}'.format(pid)) as f:
             f.write(pid)
 
     def delpid(self):
@@ -118,7 +118,7 @@ class App(object):
             sys.exit(1)
         
         # start the daemon
-        #self.daemonize()
+        self.daemonize()
         self.run()
 
     def stop(self):
@@ -130,7 +130,11 @@ class App(object):
         self.logging.debug("[App::stop] debug: entering function")
 
         # check if VLC is running and kill it
-        pid = vlc.get_vlc_pid(self.vlc_pidfile, self.logging)
+        try:
+            pid = vlc.get_vlc_pid(self.vlc_pidfile, self.logging)
+        except:
+            pid = None
+
         if pid:
             try:
                 # shutdown VLC

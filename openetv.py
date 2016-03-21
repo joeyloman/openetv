@@ -55,6 +55,9 @@ if __name__ == "__main__":
 
     try:
         action_dict[args.action]()
-    except IOError as err:
-        print err.extra_info
+    except Exception as err:
+        try:
+            print err.extra_info
+        except:
+            print "no extra_info!"
         sys.exit(1)
